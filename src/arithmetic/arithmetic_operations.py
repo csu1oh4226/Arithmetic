@@ -33,7 +33,7 @@ class ArithmeticOperations:
         Returns:
             a - b의 결과
         """
-        pass
+        return a - b
     
     def multiply(self, a: int, b: int) -> int:
         """
@@ -46,7 +46,7 @@ class ArithmeticOperations:
         Returns:
             a * b의 결과
         """
-        pass
+        return a * b
     
     def divide(self, a: int, b: int) -> int:
         """
@@ -62,7 +62,9 @@ class ArithmeticOperations:
         Raises:
             ArithmeticError: b가 0인 경우
         """
-        pass
+        if b == 0:
+            raise ArithmeticError("Division by zero")
+        return a // b
     
     def divide_quotient(self, a: int, b: int) -> float:
         """
@@ -78,5 +80,7 @@ class ArithmeticOperations:
         Raises:
             ArithmeticError: b가 0인 경우
         """
-        pass
+        if b == 0:
+            raise ArithmeticError("Division by zero")
+        return a / b
 
