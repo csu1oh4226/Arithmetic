@@ -1,5 +1,5 @@
 """
-Arithmetic Operations Test Module
+사칙연산 시스템 테스트 모듈
 사칙연산 기능에 대한 테스트 케이스입니다.
 """
 
