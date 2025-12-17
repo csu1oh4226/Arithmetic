@@ -100,6 +100,43 @@ git checkout -b green
 mvn test
 ```
 
+**구현 우선순위 목록:**
+
+##### 🔴 높은 우선순위 (필수 구현)
+1. **기본 사칙연산 메서드 구현**
+   - `add(int a, int b)` - 덧셈 (양수, 음수, 0 포함)
+   - `subtract(int a, int b)` - 뺄셈
+   - `multiply(int a, int b)` - 곱셈 (양수, 음수, 0 포함)
+   - `divide(int a, int b)` - 정수 나눗셈 (소수점 버림)
+   - `divideQuotient(int a, int b)` - 소수점 나눗셈
+
+2. **예외 처리 구현**
+   - `divide()` 메서드의 0으로 나누기 예외 처리
+     - `b == 0`일 때 `ArithmeticException` 발생
+     - 예외 메시지: "Division by zero"
+   - `divideQuotient()` 메서드의 0으로 나누기 예외 처리
+     - `b == 0`일 때 `ArithmeticException` 발생
+     - 예외 메시지: "Division by zero"
+
+##### 🟡 중간 우선순위 (권장 구현)
+3. **경계값 처리 검증**
+   - 음수 연산 정확도 확인
+   - 0 포함 연산 정확도 확인
+   - 정수 나눗셈과 소수점 나눗셈 구분 확인
+
+##### 🟢 낮은 우선순위 (선택적 구현)
+4. **추가 테스트 케이스 고려**
+   - 매우 큰 수(Big Integer) 처리 테스트
+   - 소수점 나눗셈 정밀도 테스트
+
+**구현 체크리스트:**
+- [ ] 모든 기본 사칙연산 메서드 구현 완료
+- [ ] `divide()` 메서드 예외 처리 구현 완료
+- [ ] `divideQuotient()` 메서드 예외 처리 구현 완료
+- [ ] 모든 테스트 케이스 통과 확인 (10/10)
+- [ ] 컴파일 오류 없음 확인
+- [ ] 런타임 오류 없음 확인
+
 #### Step 3: Refactor - 코드 개선
 ```bash
 # refactor 브랜치 생성 및 전환
