@@ -45,6 +45,7 @@ class CalculatorGUI(QMainWindow):
         self.current_value = "0"
         self.previous_value = None
         self.operation = None
+        self.operation_symbol = None  # 연산자 기호 저장 (표시용)
         self.memory_value = 0.0
         self.should_reset_display = False
         self.buttons = []  # 버튼 리스트 저장 (폰트 크기 조정용)
@@ -64,6 +65,10 @@ class CalculatorGUI(QMainWindow):
         # 창 크기에 따라 폰트 크기 계산
         width = self.width()
         height = self.height()
+        
+        # 계산 과정 표시 폰트 크기 조정
+        expression_font_size = max(10, min(20, int(height * 0.025)))
+        self.expression_display.setFont(QFont("Arial", expression_font_size))
         
         # 디스플레이 폰트 크기 조정 (창 높이의 6% 정도, 더 큰 범위)
         display_font_size = max(14, min(48, int(height * 0.06)))
@@ -113,10 +118,26 @@ class CalculatorGUI(QMainWindow):
     def _create_display(self, parent_layout):
         """
         디스플레이 위젯을 생성하고 레이아웃에 추가합니다.
+        계산 과정을 표시하는 라인도 함께 생성합니다.
         
         Args:
             parent_layout: 부모 레이아웃
         """
+        # 계산 과정 표시 라인 (작은 폰트)
+        self.expression_display = QLabel("")
+        self.expression_display.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.expression_display.setFont(QFont("Arial", 12))
+        self.expression_display.setStyleSheet("""
+            QLabel {
+                color: #555;
+                padding: 5px 10px;
+                background-color: #e0e0e0;
+            }
+        """)
+        self.expression_display.setMinimumHeight(25)
+        parent_layout.addWidget(self.expression_display)
+        
+        # 메인 디스플레이 (결과 표시)
         self.display = QLineEdit()
         self.display.setText("0")
         self.display.setReadOnly(True)
@@ -387,7 +408,11 @@ class CalculatorGUI(QMainWindow):
         }
         
         self.operation = operation_map.get(operation_text)
+        self.operation_symbol = operation_text  # 연산자 기호 저장
         self.should_reset_display = True
+        
+        # 계산 과정 표시 업데이트
+        self._update_expression_display()
         
         # 단항 연산은 즉시 계산
         if operation_text in ['%', '1/x', 'x²', '²√x']:
@@ -410,12 +435,20 @@ class CalculatorGUI(QMainWindow):
             if operation_name is None:
                 return
             
+            # 계산 과정 표시
+            value_display = str(int(value)) if value == int(value) else str(value)
+            expression = f"{operation}({value_display}) ="
+            self.expression_display.setText(expression)
+            
             # Strategy Pattern을 사용하여 연산 수행
             strategy = OperationStrategyFactory.get_strategy(operation_name)
             result = strategy.execute(self.calculator, value)
             
             self.update_display(result)
             self.should_reset_display = True
+            
+            # 계산 완료 후 표현식 초기화 (약간의 지연 후)
+            # self.expression_display.setText("")  # 즉시 초기화하지 않고 결과와 함께 표시
             
         except DivisionByZeroError:
             self.show_error("0으로 나눌 수 없습니다")
@@ -432,6 +465,9 @@ class CalculatorGUI(QMainWindow):
         try:
             current = float(self.current_value)
             
+            # 계산 과정 표시 업데이트 (계산 전)
+            self._update_expression_display_with_result(current)
+            
             # Strategy Pattern을 사용하여 연산 수행
             strategy = OperationStrategyFactory.get_strategy(self.operation)
             result = strategy.execute(self.calculator, self.previous_value, current)
@@ -439,7 +475,11 @@ class CalculatorGUI(QMainWindow):
             self.update_display(result)
             self.previous_value = None
             self.operation = None
+            self.operation_symbol = None
             self.should_reset_display = True
+            
+            # 계산 완료 후 표현식 초기화
+            self.expression_display.setText("")
             
         except DivisionByZeroError:
             self.show_error("0으로 나눌 수 없습니다")
@@ -485,8 +525,27 @@ class CalculatorGUI(QMainWindow):
         self.current_value = "0"
         self.previous_value = None
         self.operation = None
+        self.operation_symbol = None
         self.should_reset_display = False
         self.update_display("0")
+        self.expression_display.setText("")
+    
+    def _update_expression_display(self):
+        """계산 과정 표시 업데이트 (연산자 입력 시)"""
+        if self.previous_value is not None and self.operation_symbol:
+            # 값이 정수인 경우 소수점 제거
+            prev_display = str(int(self.previous_value)) if self.previous_value == int(self.previous_value) else str(self.previous_value)
+            expression = f"{prev_display} {self.operation_symbol}"
+            self.expression_display.setText(expression)
+    
+    def _update_expression_display_with_result(self, second_value):
+        """계산 과정 표시 업데이트 (결과 계산 전)"""
+        if self.previous_value is not None and self.operation_symbol:
+            # 값이 정수인 경우 소수점 제거
+            prev_display = str(int(self.previous_value)) if self.previous_value == int(self.previous_value) else str(self.previous_value)
+            second_display = str(int(second_value)) if second_value == int(second_value) else str(second_value)
+            expression = f"{prev_display} {self.operation_symbol} {second_display} ="
+            self.expression_display.setText(expression)
     
     def handle_memory_operation(self):
         """메모리 연산 처리"""
