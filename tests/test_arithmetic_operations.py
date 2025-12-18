@@ -5,6 +5,7 @@
 
 import pytest
 from src.arithmetic.arithmetic_operations import ArithmeticOperations
+from src.arithmetic.exceptions import DivisionByZeroError
 
 
 class TestArithmeticOperations:
@@ -31,8 +32,8 @@ class TestArithmeticOperations:
     def test_division_by_zero(self):
         """나눗셈 테스트: 0으로 나누기 (예외 발생)"""
         # 입력: 0 / 0
-        # 예상 결과: ArithmeticError 예외 발생
-        with pytest.raises(ArithmeticError):
+        # 예상 결과: DivisionByZeroError 예외 발생
+        with pytest.raises(DivisionByZeroError):
             self.calculator.divide(0, 0)
     
     def test_addition_negative_numbers(self):
@@ -82,8 +83,8 @@ class TestArithmeticOperations:
     def test_division_quotient_by_zero(self):
         """나눗셈 테스트: divide_quotient()의 0으로 나누기 (예외 발생)"""
         # 입력: 5 / 0
-        # 예상 결과: ArithmeticError 예외 발생
-        with pytest.raises(ArithmeticError) as exc_info:
+        # 예상 결과: DivisionByZeroError 예외 발생
+        with pytest.raises(DivisionByZeroError) as exc_info:
             self.calculator.divide_quotient(5, 0)
         assert str(exc_info.value) == "Division by zero"
     
