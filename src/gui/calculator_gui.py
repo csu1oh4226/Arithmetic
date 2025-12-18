@@ -165,7 +165,7 @@ class CalculatorGUI(QMainWindow):
     def _create_button_layout(self) -> QGridLayout:
         """
         버튼 레이아웃을 생성하고 반환합니다.
-        Windows 계산기처럼 버튼들이 균등하게 공간을 차지하고 공백이 생기지 않습니다.
+        버튼들이 균등하게 4개 열을 꽉 채웁니다.
         
         Returns:
             버튼이 배치된 GridLayout
@@ -173,18 +173,18 @@ class CalculatorGUI(QMainWindow):
         button_layout = QGridLayout()
         button_layout.setSpacing(1)  # spacing을 최소화하여 공백 제거
         button_layout.setContentsMargins(0, 0, 0, 0)  # margins 제거
-        # 모든 열에 균등한 stretch 설정 (Windows 계산기처럼)
-        for i in range(6):
+        # 4개 열에 균등한 stretch 설정
+        for i in range(4):
             button_layout.setColumnStretch(i, 1)
         
-        # 메모리 버튼 생성
-        self._create_memory_buttons(button_layout)
+        # 메모리 버튼 생성 (선택적 - 필요시 주석 해제)
+        # self._create_memory_buttons(button_layout)
         
         # 일반 버튼 생성
         self._create_operation_buttons(button_layout)
         
-        # 모든 행에 균등한 stretch 설정 (Windows 계산기처럼 높이도 균등)
-        for i in range(7):  # 메모리 1행 + 일반 버튼 6행
+        # 모든 행에 균등한 stretch 설정 (6행)
+        for i in range(6):
             button_layout.setRowStretch(i, 1)
         
         return button_layout
@@ -206,6 +206,7 @@ class CalculatorGUI(QMainWindow):
     def _create_operation_buttons(self, button_layout: QGridLayout):
         """
         연산 버튼을 생성하고 레이아웃에 추가합니다.
+        버튼들이 4개 열을 균등하게 채웁니다.
         
         Args:
             button_layout: 버튼 레이아웃
@@ -225,7 +226,7 @@ class CalculatorGUI(QMainWindow):
             ['+/-', '0', '.', '='],
         ]
         
-        row_offset = 1
+        row_offset = 0  # 메모리 버튼 행 제거로 offset 0으로 변경
         for row_idx, row in enumerate(buttons):
             for col_idx, btn_text in enumerate(row):
                 btn = self._create_single_button(btn_text)
