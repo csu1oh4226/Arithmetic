@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QGridLayout,
     QPushButton, QLineEdit, QLabel
 )
+from PyQt6 import QtWidgets
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 
@@ -46,13 +47,50 @@ class CalculatorGUI(QMainWindow):
         self.operation = None
         self.memory_value = 0.0
         self.should_reset_display = False
+        self.buttons = []  # 버튼 리스트 저장 (폰트 크기 조정용)
         
         self.init_ui()
+    
+    def resizeEvent(self, event):
+        """
+        창 크기 변경 시 버튼과 디스플레이의 폰트 크기를 동적으로 조정합니다.
+        Windows 계산기처럼 부드럽게 크기 조정됩니다.
+        
+        Args:
+            event: 리사이즈 이벤트
+        """
+        super().resizeEvent(event)
+        
+        # 창 크기에 따라 폰트 크기 계산
+        width = self.width()
+        height = self.height()
+        
+        # 디스플레이 폰트 크기 조정 (창 높이의 6% 정도, 더 큰 범위)
+        display_font_size = max(14, min(48, int(height * 0.06)))
+        self.display.setFont(QFont("Arial", display_font_size))
+        
+        # 버튼 폰트 크기 조정 (창 높이의 4% 정도, 더 큰 범위)
+        button_font_size = max(10, min(28, int(height * 0.04)))
+        for button in self.buttons:
+            if button:
+                button.setFont(QFont("Arial", button_font_size))
     
     def init_ui(self):
         """UI 초기화"""
         self.setWindowTitle("계산기")
-        self.setFixedSize(WINDOW_WIDTH, WINDOW_HEIGHT)
+        # 최소 크기 설정 (Windows 계산기처럼 작게도 가능)
+        min_width = 180
+        min_height = 250
+        self.setMinimumSize(min_width, min_height)
+        # 초기 크기를 최소 크기로 설정 (최대 축소 상태로 시작)
+        self.resize(min_width, min_height)
+        
+        # 윈도우 배경색 설정
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #d0d0d0;
+            }
+        """)
         
         # 중앙 위젯
         central_widget = QWidget()
@@ -60,14 +98,17 @@ class CalculatorGUI(QMainWindow):
         
         # 메인 레이아웃
         main_layout = QVBoxLayout()
+        main_layout.setSpacing(2)  # spacing을 더 작게
+        main_layout.setContentsMargins(2, 2, 2, 2)  # margins도 더 작게
+        main_layout.setContentsMargins(0, 0, 0, 0)  # 공백 제거를 위해 margins를 0으로
         central_widget.setLayout(main_layout)
         
-        # 디스플레이 생성
+        # 디스플레이 생성 (stretch factor: 1.5 - Windows 계산기 비율)
         self._create_display(main_layout)
         
-        # 버튼 레이아웃 생성
+        # 버튼 레이아웃 생성 (stretch factor: 4 - Windows 계산기 비율)
         button_layout = self._create_button_layout()
-        main_layout.addLayout(button_layout)
+        main_layout.addLayout(button_layout, 4)
     
     def _create_display(self, parent_layout):
         """
@@ -83,29 +124,47 @@ class CalculatorGUI(QMainWindow):
         self.display.setFont(QFont("Arial", DISPLAY_FONT_SIZE))
         self.display.setStyleSheet("""
             QLineEdit {
-                border: 2px solid #ccc;
+                border: 2px solid #999;
                 border-radius: 5px;
                 padding: 10px;
-                background-color: white;
+                background-color: #e0e0e0;
+                color: #222;
             }
         """)
-        parent_layout.addWidget(self.display)
+        # 디스플레이도 최소 높이만 설정하여 확대/축소 가능 (Windows 계산기처럼)
+        self.display.setMinimumHeight(40)
+        # 디스플레이도 확장되도록 설정
+        self.display.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Expanding
+        )
+        # stretch factor 설정으로 창 크기에 비례하여 확대/축소
+        parent_layout.addWidget(self.display, 1)
     
     def _create_button_layout(self) -> QGridLayout:
         """
         버튼 레이아웃을 생성하고 반환합니다.
+        Windows 계산기처럼 버튼들이 균등하게 공간을 차지하고 공백이 생기지 않습니다.
         
         Returns:
             버튼이 배치된 GridLayout
         """
         button_layout = QGridLayout()
-        button_layout.setSpacing(5)
+        button_layout.setSpacing(1)  # spacing을 최소화하여 공백 제거
+        button_layout.setContentsMargins(0, 0, 0, 0)  # margins 제거
+        # 모든 열에 균등한 stretch 설정 (Windows 계산기처럼)
+        for i in range(6):
+            button_layout.setColumnStretch(i, 1)
         
         # 메모리 버튼 생성
         self._create_memory_buttons(button_layout)
         
         # 일반 버튼 생성
         self._create_operation_buttons(button_layout)
+        
+        # 모든 행에 균등한 stretch 설정 (Windows 계산기처럼 높이도 균등)
+        for i in range(7):  # 메모리 1행 + 일반 버튼 6행
+            button_layout.setRowStretch(i, 1)
         
         return button_layout
     
@@ -178,12 +237,25 @@ class CalculatorGUI(QMainWindow):
         return btn
     
     def create_button(self, text, handler):
-        """버튼 생성 헬퍼 메서드"""
+        """
+        버튼 생성 헬퍼 메서드
+        Windows 계산기처럼 크기가 자동으로 조정되고 공백이 생기지 않습니다.
+        """
         button = QPushButton(text)
-        button.setFixedHeight(BUTTON_HEIGHT)
+        # 고정 크기 제거 - 레이아웃에 맞게 완전히 채우도록 (Windows 계산기처럼)
+        button.setMinimumHeight(20)  # 최소 높이만 설정
+        button.setMinimumWidth(25)   # 최소 너비만 설정
+        # 버튼이 항상 확장되도록 설정
+        button.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Expanding
+        )
+        # 폰트 크기도 동적으로 조정되도록 (resizeEvent에서 처리)
         button.setFont(QFont("Arial", BUTTON_FONT_SIZE))
         button.clicked.connect(handler)
         button.setStyleSheet(self._get_button_style('default'))
+        # 버튼 리스트에 추가 (resizeEvent에서 폰트 크기 조정용)
+        self.buttons.append(button)
         return button
     
     def _get_button_style(self, button_type: str) -> str:
@@ -199,20 +271,21 @@ class CalculatorGUI(QMainWindow):
         styles = {
             'memory': """
                 QPushButton {
-                    background-color: #f0f0f0;
-                    color: #666;
+                    background-color: #c0c0c0;
+                    color: #222;
                     font-size: 12px;
                 }
                 QPushButton:hover {
-                    background-color: #e0e0e0;
+                    background-color: #b0b0b0;
                 }
             """,
             'operator': """
                 QPushButton {
-                    background-color: #e0e0e0;
+                    background-color: #b5b5b5;
+                    color: #111;
                 }
                 QPushButton:hover {
-                    background-color: #d0d0d0;
+                    background-color: #a5a5a5;
                 }
             """,
             'equals': """
@@ -227,23 +300,25 @@ class CalculatorGUI(QMainWindow):
             """,
             'clear': """
                 QPushButton {
-                    background-color: #f0f0f0;
+                    background-color: #c0c0c0;
+                    color: #222;
                 }
                 QPushButton:hover {
-                    background-color: #e0e0e0;
+                    background-color: #b0b0b0;
                 }
             """,
             'default': """
                 QPushButton {
-                    background-color: white;
-                    border: 1px solid #ccc;
+                    background-color: #d5d5d5;
+                    border: 1px solid #999;
                     border-radius: 5px;
+                    color: #222;
                 }
                 QPushButton:hover {
-                    background-color: #f0f0f0;
+                    background-color: #c5c5c5;
                 }
                 QPushButton:pressed {
-                    background-color: #e0e0e0;
+                    background-color: #b5b5b5;
                 }
             """
         }
