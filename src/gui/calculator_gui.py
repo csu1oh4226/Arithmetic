@@ -33,6 +33,64 @@ SCIENTIFIC_NOTATION_DECIMALS = 10
 PERCENTAGE_DIVISOR = 100
 SQUARE_ROOT_POWER = 0.5
 
+# 최소 크기
+MIN_WINDOW_WIDTH = 180
+MIN_WINDOW_HEIGHT = 250
+
+# 폰트 크기 계산 비율
+EXPRESSION_FONT_SIZE_RATIO = 0.025
+DISPLAY_FONT_SIZE_RATIO = 0.06
+BUTTON_FONT_SIZE_RATIO = 0.04
+
+# 폰트 크기 제한
+EXPRESSION_FONT_MIN = 10
+EXPRESSION_FONT_MAX = 20
+DISPLAY_FONT_MIN = 14
+DISPLAY_FONT_MAX = 48
+BUTTON_FONT_MIN = 10
+BUTTON_FONT_MAX = 28
+
+# 최소 높이
+EXPRESSION_DISPLAY_MIN_HEIGHT = 25
+MAIN_DISPLAY_MIN_HEIGHT = 40
+BUTTON_MIN_HEIGHT = 20
+BUTTON_MIN_WIDTH = 25
+
+# 연산자 매핑 (중복 제거)
+OPERATION_MAP = {
+    '+': 'add',
+    '-': 'subtract',
+    '×': 'multiply',
+    '÷': 'divide_quotient',
+    '%': 'percentage',
+    '1/x': 'reciprocal',
+    'x²': 'square',
+    '²√x': 'square_root',
+}
+
+# 단항 연산자 리스트
+UNARY_OPERATIONS = ['%', '1/x', 'x²', '²√x']
+
+# 색상 팔레트
+COLOR_BACKGROUND = "#d0d0d0"
+COLOR_DISPLAY_BG = "#e0e0e0"
+COLOR_DISPLAY_TEXT = "#222"
+COLOR_EXPRESSION_TEXT = "#555"
+COLOR_BUTTON_DEFAULT = "#d5d5d5"
+COLOR_BUTTON_MEMORY = "#c0c0c0"
+COLOR_BUTTON_OPERATOR = "#b5b5b5"
+COLOR_BUTTON_CLEAR = "#c0c0c0"
+COLOR_BUTTON_EQUALS = "#0078d4"
+COLOR_BUTTON_EQUALS_HOVER = "#106ebe"
+COLOR_BUTTON_HOVER_LIGHT = "#c5c5c5"
+COLOR_BUTTON_HOVER_DARK = "#b0b0b0"
+COLOR_BUTTON_HOVER_OPERATOR = "#a5a5a5"
+COLOR_BUTTON_PRESSED = "#b5b5b5"
+COLOR_BUTTON_BORDER = "#999"
+COLOR_TEXT_DARK = "#222"
+COLOR_TEXT_LIGHT = "#111"
+COLOR_TEXT_WHITE = "white"
+
 
 class CalculatorGUI(QMainWindow):
     """
@@ -67,15 +125,24 @@ class CalculatorGUI(QMainWindow):
         height = self.height()
         
         # 계산 과정 표시 폰트 크기 조정
-        expression_font_size = max(10, min(20, int(height * 0.025)))
+        expression_font_size = max(
+            EXPRESSION_FONT_MIN, 
+            min(EXPRESSION_FONT_MAX, int(height * EXPRESSION_FONT_SIZE_RATIO))
+        )
         self.expression_display.setFont(QFont("Arial", expression_font_size))
         
-        # 디스플레이 폰트 크기 조정 (창 높이의 6% 정도, 더 큰 범위)
-        display_font_size = max(14, min(48, int(height * 0.06)))
+        # 디스플레이 폰트 크기 조정
+        display_font_size = max(
+            DISPLAY_FONT_MIN, 
+            min(DISPLAY_FONT_MAX, int(height * DISPLAY_FONT_SIZE_RATIO))
+        )
         self.display.setFont(QFont("Arial", display_font_size))
         
-        # 버튼 폰트 크기 조정 (창 높이의 4% 정도, 더 큰 범위)
-        button_font_size = max(10, min(28, int(height * 0.04)))
+        # 버튼 폰트 크기 조정
+        button_font_size = max(
+            BUTTON_FONT_MIN, 
+            min(BUTTON_FONT_MAX, int(height * BUTTON_FONT_SIZE_RATIO))
+        )
         for button in self.buttons:
             if button:
                 button.setFont(QFont("Arial", button_font_size))
@@ -84,17 +151,15 @@ class CalculatorGUI(QMainWindow):
         """UI 초기화"""
         self.setWindowTitle("계산기")
         # 최소 크기 설정 (Windows 계산기처럼 작게도 가능)
-        min_width = 180
-        min_height = 250
-        self.setMinimumSize(min_width, min_height)
+        self.setMinimumSize(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT)
         # 초기 크기를 최소 크기로 설정 (최대 축소 상태로 시작)
-        self.resize(min_width, min_height)
+        self.resize(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT)
         
         # 윈도우 배경색 설정
-        self.setStyleSheet("""
-            QMainWindow {
-                background-color: #d0d0d0;
-            }
+        self.setStyleSheet(f"""
+            QMainWindow {{
+                background-color: {COLOR_BACKGROUND};
+            }}
         """)
         
         # 중앙 위젯
@@ -104,7 +169,6 @@ class CalculatorGUI(QMainWindow):
         # 메인 레이아웃
         main_layout = QVBoxLayout()
         main_layout.setSpacing(2)  # spacing을 더 작게
-        main_layout.setContentsMargins(2, 2, 2, 2)  # margins도 더 작게
         main_layout.setContentsMargins(0, 0, 0, 0)  # 공백 제거를 위해 margins를 0으로
         central_widget.setLayout(main_layout)
         
@@ -127,14 +191,14 @@ class CalculatorGUI(QMainWindow):
         self.expression_display = QLabel("")
         self.expression_display.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.expression_display.setFont(QFont("Arial", 12))
-        self.expression_display.setStyleSheet("""
-            QLabel {
-                color: #555;
+        self.expression_display.setStyleSheet(f"""
+            QLabel {{
+                color: {COLOR_EXPRESSION_TEXT};
                 padding: 5px 10px;
-                background-color: #e0e0e0;
-            }
+                background-color: {COLOR_DISPLAY_BG};
+            }}
         """)
-        self.expression_display.setMinimumHeight(25)
+        self.expression_display.setMinimumHeight(EXPRESSION_DISPLAY_MIN_HEIGHT)
         parent_layout.addWidget(self.expression_display)
         
         # 메인 디스플레이 (결과 표시)
@@ -143,17 +207,17 @@ class CalculatorGUI(QMainWindow):
         self.display.setReadOnly(True)
         self.display.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.display.setFont(QFont("Arial", DISPLAY_FONT_SIZE))
-        self.display.setStyleSheet("""
-            QLineEdit {
-                border: 2px solid #999;
+        self.display.setStyleSheet(f"""
+            QLineEdit {{
+                border: 2px solid {COLOR_BUTTON_BORDER};
                 border-radius: 5px;
                 padding: 10px;
-                background-color: #e0e0e0;
-                color: #222;
-            }
+                background-color: {COLOR_DISPLAY_BG};
+                color: {COLOR_DISPLAY_TEXT};
+            }}
         """)
         # 디스플레이도 최소 높이만 설정하여 확대/축소 가능 (Windows 계산기처럼)
-        self.display.setMinimumHeight(40)
+        self.display.setMinimumHeight(MAIN_DISPLAY_MIN_HEIGHT)
         # 디스플레이도 확장되도록 설정
         self.display.setSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding,
@@ -265,8 +329,8 @@ class CalculatorGUI(QMainWindow):
         """
         button = QPushButton(text)
         # 고정 크기 제거 - 레이아웃에 맞게 완전히 채우도록 (Windows 계산기처럼)
-        button.setMinimumHeight(20)  # 최소 높이만 설정
-        button.setMinimumWidth(25)   # 최소 너비만 설정
+        button.setMinimumHeight(BUTTON_MIN_HEIGHT)
+        button.setMinimumWidth(BUTTON_MIN_WIDTH)
         # 버튼이 항상 확장되도록 설정
         button.setSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding,
@@ -291,57 +355,57 @@ class CalculatorGUI(QMainWindow):
             스타일시트 문자열
         """
         styles = {
-            'memory': """
-                QPushButton {
-                    background-color: #c0c0c0;
-                    color: #222;
+            'memory': f"""
+                QPushButton {{
+                    background-color: {COLOR_BUTTON_MEMORY};
+                    color: {COLOR_TEXT_DARK};
                     font-size: 12px;
-                }
-                QPushButton:hover {
-                    background-color: #b0b0b0;
-                }
+                }}
+                QPushButton:hover {{
+                    background-color: {COLOR_BUTTON_HOVER_DARK};
+                }}
             """,
-            'operator': """
-                QPushButton {
-                    background-color: #b5b5b5;
-                    color: #111;
-                }
-                QPushButton:hover {
-                    background-color: #a5a5a5;
-                }
+            'operator': f"""
+                QPushButton {{
+                    background-color: {COLOR_BUTTON_OPERATOR};
+                    color: {COLOR_TEXT_LIGHT};
+                }}
+                QPushButton:hover {{
+                    background-color: {COLOR_BUTTON_HOVER_OPERATOR};
+                }}
             """,
-            'equals': """
-                QPushButton {
-                    background-color: #0078d4;
-                    color: white;
+            'equals': f"""
+                QPushButton {{
+                    background-color: {COLOR_BUTTON_EQUALS};
+                    color: {COLOR_TEXT_WHITE};
                     font-weight: bold;
-                }
-                QPushButton:hover {
-                    background-color: #106ebe;
-                }
+                }}
+                QPushButton:hover {{
+                    background-color: {COLOR_BUTTON_EQUALS_HOVER};
+                }}
             """,
-            'clear': """
-                QPushButton {
-                    background-color: #c0c0c0;
-                    color: #222;
-                }
-                QPushButton:hover {
-                    background-color: #b0b0b0;
-                }
+            'clear': f"""
+                QPushButton {{
+                    background-color: {COLOR_BUTTON_CLEAR};
+                    color: {COLOR_TEXT_DARK};
+                }}
+                QPushButton:hover {{
+                    background-color: {COLOR_BUTTON_HOVER_DARK};
+                }}
             """,
-            'default': """
-                QPushButton {
-                    background-color: #d5d5d5;
-                    border: 1px solid #999;
+            'default': f"""
+                QPushButton {{
+                    background-color: {COLOR_BUTTON_DEFAULT};
+                    border: 1px solid {COLOR_BUTTON_BORDER};
                     border-radius: 5px;
-                    color: #222;
-                }
-                QPushButton:hover {
-                    background-color: #c5c5c5;
-                }
-                QPushButton:pressed {
-                    background-color: #b5b5b5;
-                }
+                    color: {COLOR_TEXT_DARK};
+                }}
+                QPushButton:hover {{
+                    background-color: {COLOR_BUTTON_HOVER_LIGHT};
+                }}
+                QPushButton:pressed {{
+                    background-color: {COLOR_BUTTON_PRESSED};
+                }}
             """
         }
         return styles.get(button_type, styles['default'])
@@ -396,19 +460,8 @@ class CalculatorGUI(QMainWindow):
         except ValueError:
             self.previous_value = 0.0
         
-        # 연산자 매핑
-        operation_map = {
-            '+': 'add',
-            '-': 'subtract',
-            '×': 'multiply',
-            '÷': 'divide_quotient',
-            '%': 'percentage',
-            '1/x': 'reciprocal',
-            'x²': 'square',
-            '²√x': 'square_root',
-        }
-        
-        self.operation = operation_map.get(operation_text)
+        # 연산자 매핑 (상수 사용)
+        self.operation = OPERATION_MAP.get(operation_text)
         self.operation_symbol = operation_text  # 연산자 기호 저장
         self.should_reset_display = True
         
@@ -416,7 +469,7 @@ class CalculatorGUI(QMainWindow):
         self._update_expression_display()
         
         # 단항 연산은 즉시 계산
-        if operation_text in ['%', '1/x', 'x²', '²√x']:
+        if operation_text in UNARY_OPERATIONS:
             self.calculate_unary_operation(operation_text)
     
     def calculate_unary_operation(self, operation):
@@ -424,20 +477,13 @@ class CalculatorGUI(QMainWindow):
         try:
             value = float(self.current_value)
             
-            # 연산자 매핑
-            operation_map = {
-                '%': 'percentage',
-                '1/x': 'reciprocal',
-                'x²': 'square',
-                '²√x': 'square_root',
-            }
-            
-            operation_name = operation_map.get(operation)
+            # 연산자 매핑 (상수 사용)
+            operation_name = OPERATION_MAP.get(operation)
             if operation_name is None:
                 return
             
             # 계산 과정 표시
-            value_display = str(int(value)) if value == int(value) else str(value)
+            value_display = self._format_value_for_display(value)
             expression = f"{operation}({value_display}) ="
             self.expression_display.setText(expression)
             
@@ -447,9 +493,6 @@ class CalculatorGUI(QMainWindow):
             
             self.update_display(result)
             self.should_reset_display = True
-            
-            # 계산 완료 후 표현식 초기화 (약간의 지연 후)
-            # self.expression_display.setText("")  # 즉시 초기화하지 않고 결과와 함께 표시
             
         except DivisionByZeroError:
             self.show_error("0으로 나눌 수 없습니다")
@@ -531,20 +574,31 @@ class CalculatorGUI(QMainWindow):
         self.update_display("0")
         self.expression_display.setText("")
     
+    def _format_value_for_display(self, value: float) -> str:
+        """
+        값을 디스플레이용 문자열로 포맷팅합니다.
+        정수인 경우 소수점을 제거합니다.
+        
+        Args:
+            value: 포맷팅할 값
+            
+        Returns:
+            포맷팅된 문자열
+        """
+        return str(int(value)) if value == int(value) else str(value)
+    
     def _update_expression_display(self):
         """계산 과정 표시 업데이트 (연산자 입력 시)"""
         if self.previous_value is not None and self.operation_symbol:
-            # 값이 정수인 경우 소수점 제거
-            prev_display = str(int(self.previous_value)) if self.previous_value == int(self.previous_value) else str(self.previous_value)
+            prev_display = self._format_value_for_display(self.previous_value)
             expression = f"{prev_display} {self.operation_symbol}"
             self.expression_display.setText(expression)
     
     def _update_expression_display_with_result(self, second_value):
         """계산 과정 표시 업데이트 (결과 계산 전)"""
         if self.previous_value is not None and self.operation_symbol:
-            # 값이 정수인 경우 소수점 제거
-            prev_display = str(int(self.previous_value)) if self.previous_value == int(self.previous_value) else str(self.previous_value)
-            second_display = str(int(second_value)) if second_value == int(second_value) else str(second_value)
+            prev_display = self._format_value_for_display(self.previous_value)
+            second_display = self._format_value_for_display(second_value)
             expression = f"{prev_display} {self.operation_symbol} {second_display} ="
             self.expression_display.setText(expression)
     
